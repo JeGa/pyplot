@@ -1,83 +1,83 @@
 import logging
 
-import numpy as np
 import matplotlib.pyplot as plt
 
+import pyplot.misc
 import pyplot.settings
 
 logger = logging.getLogger(__name__)
 
 
-def histogram(data, filepath, xlabel, ylabel, title, ylim=None):
+def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None):
+    """histogram.
+
+    :param data: Dict of {'label': data} were data is a numpy array of shape (N,).
+    :param filepath: Complete path to file with extension.
+    :param title: Title for the plot.
+    :param xlabel: Label for x axis.
+    :param ylabel: Label for y axis.
+    :param ylim: Tuple with (bottom, top) limits for y axis.
+    :param xlim: Tuple with (left, right) limits for x axis.
     """
-    :param data: Dict of {'label': data}.
-    """
-    _, ax = plt.subplots()
-
-    # First value of first entry.
-    _min = _max = list(data.values())[0][0]
-
-    # Find min and max values.
-    for key, value in data.items():
-        class_min = int(np.floor(value.min()))
-        class_max = int(np.ceil(value.max()))
-
-        if class_min < _min:
-            _min = class_min
-
-        if class_max > _max:
-            _max = class_max
+    fig, ax = plt.subplots()
 
     for entry_name, entry_data in data.items():
-        bins = list(range(_min, 10 + _max, 10))
-
-        hist, bin_edges = np.histogram(entry_data, bins=bins)
-
-        width = bin_edges[1] - bin_edges[0]
-
-        # Each bin represents the fraction of samples.
-        hist = hist / hist.sum()
-
-        plt.bar(bin_edges[:-1], hist, width=width, label=entry_name, alpha=0.6)
+        plt.hist(entry_data, label=entry_name, density=True, bins="auto", alpha=0.6)
 
     if ylim:
-        ax.set_ylim(top=ylim)
+        ax.set_ylim(ylim)
 
-    pyplot.settings.set_settings(title, xlabel, ylabel, legend=True)
+    if xlim:
+        ax.set_xlim(xlim)
+
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend=True)
+    pyplot.settings.set_size(fig)
+
     plt.savefig(filepath)
 
 
-def plot_line(data, filepath, title, xlabel, ylabel, legend=True):
-    plt.figure()
+def lines(data, filepath, title, xlabel, ylabel, legend=True, infodict=None):
+    """lines
 
-    for label, x, y in data:
-        plt.plot(x, y, label=label, linewidth=0.5)
-
-    pyplot.settings.set_settings(title, xlabel, ylabel, legend)
-    plt.savefig(filepath)
-
-
-def scatter(data, filepath, title, xlabel, ylabel, legend=True):
+    :param data: Dict with {'label': data} where data is a numpy array of shape (N, 2).
+    :param filepath: Complete path to file with extension.
+    :param title: Title for the plot.
+    :param xlabel: Label for x axis.
+    :param ylabel: Label for y axis.
+    :param legend: True to enable legend.
+    :param infodict: If not None, dict is plotted as table besides line plot.
     """
-    :param data: Numpy array with (class, x, y).
-    """
-    fig, ax = plt.subplots(1, 1)
+    if infodict:
+        fig, (ax, table_ax) = plt.subplots(1, 2)
 
-    for i in range(int(data[:, 0].max() + 1)):
-        mask = data[:, 0] == i
-        ax.scatter(data[mask, 1], data[mask, 2], marker='.', s=1, label=str(i), alpha=0.6)
+        table_data = [[key, str(value)] for key, value in infodict.items()]
+        table_ax.table(table_data, loc="center", cellLoc="left")
 
-    pyplot.settings.set_settings(title, xlabel, ylabel, legend)
+        table_ax.set_axis_off()
+    else:
+        fig, ax = plt.subplots()
+
+    for label, line in data.items():
+        ax.plot(line[:, 0], line[:, 1], label=label, linewidth=0.5)
+
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
+    pyplot.settings.set_size(fig)
+
     plt.savefig(filepath)
 
 
-# TODO
 def lines_confidence(data, filepath, title, xlabel, ylabel, legend=True):
-    """
+    """lines_confidence
+
     :param data: Dict with {'label', data} where data = (line, error) and
-        line,error are of shape (N, 2).
+        line, error are of shape (N, 2).
+    :param filepath: Complete path to file with extension.
+    :param title: Title for the plot.
+    :param xlabel: Label for x axis.
+    :param ylabel: Label for y axis.
+    :param legend: True to enable legend.
     """
-    fig, ax = plt.subplots(1, 1)
+    _, ax = plt.subplots()
 
     for label, line_data in data.items():
         line, error = line_data
@@ -89,18 +89,69 @@ def lines_confidence(data, filepath, title, xlabel, ylabel, legend=True):
 
         ax.fill_between(line[:, 0], lower, upper, alpha=0.1)
 
-    pyplot.settings.set_settings(title, xlabel, ylabel, legend)
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
     plt.savefig(filepath)
 
 
-def lines(data, filepath, title, xlabel, ylabel, legend=True):
-    """
-    :param data: Dict with {'label': data} where data is a numpy array of shape (N, 2).
-    """
-    fig, ax = plt.subplots(1, 1)
+def scatter(
+    points, filepath, title, xlabel, ylabel, legend=True, xlim=None, ylim=None, **kwargs
+):
+    """scatter.
 
-    for label, line in data.items():
-        ax.plot(line[:, 0], line[:, 1], label=label, linewidth=0.5)
+    :param points: Dict with {key: data} where data has shape (N, 2).
+    :param filepath: Complete path to file with extension.
+    :param title: Title for the plot.
+    :param xlabel: Label for x axis.
+    :param ylabel: Label for y axis.
+    :param legend: True to enable legend.
+    :param ylim: Tuple with (bottom, top) limits for y axis.
+    :param xlim: Tuple with (left, right) limits for x axis.
+    :param kwargs: Forwarded to ax.scatter.
+    """
+    for z in points.values():
+        if z.shape[1] != 2:
+            raise ValueError("Points need to be 2D.")
 
-    pyplot.settings.set_settings(title, xlabel, ylabel, legend)
+    fig, ax = plt.subplots()
+
+    for key, data in points.items():
+        ax.scatter(data[:, 0], data[:, 1], marker=".", label=key, **kwargs)
+
+    if xlim:
+        ax.set_xlim(xlim)
+
+    if ylim:
+        ax.set_ylim(ylim)
+
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
+    pyplot.settings.set_size(fig)
+
+    plt.savefig(filepath)
+
+
+def sorted_bar(data, filepath, title, ylabel):
+    """sorted_bar.
+
+    The color is always the same for each key when you call this function multiple times
+    with the same keys but different data.
+
+    :param data: Dict with {key: scalar}.
+    :param title: Title for the plot.
+    :param ylabel: Label for y axis.
+    """
+    fig, ax = plt.subplots()
+
+    # Sort keys
+    sorted_keys = sorted(data.keys())
+    color_map = pyplot.misc.get_colormap(sorted_keys)
+
+    # Sort values
+    sorted_dict = dict(sorted(data.items(), key=lambda item: item[1]))
+    colors = [color_map[key] for key in sorted_dict.keys()]
+
+    ax.bar(sorted_dict.keys(), sorted_dict.values(), color=colors)
+
+    pyplot.settings.set_settings(ax, title, ylabel=ylabel, legend=False)
+    pyplot.settings.set_size(fig)
+
     plt.savefig(filepath)

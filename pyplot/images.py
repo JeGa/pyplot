@@ -1,65 +1,95 @@
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
+import mpl_toolkits.axes_grid1
 
 
-def image_grid(images, gray, filepath=None):
+def _image_reshape(_image):
+    if _image.shape[0] == 1:
+        cmap = "gray"
+        _image = np.squeeze(_image)
+    else:
+        cmap = None
+        _image = np.moveaxis(_image, 0, -1)
+
+    return _image, cmap
+
+
+def subgrid(fig, pos, image_dict, gridsize):
     """
-    :param images: Numpy array with shape (batch_size, height, width, channels).
-    :param gray: If True, the grayvalue color map is used.
-    :param filepath: If not None, the image is saved as 'filepath'.
+    Plot image grid on an existing plot.
+    Be sure to create an axes for the subgrid before.
+
+    :param fig: Matplotlib figure to plot on.
+    :param pos: Position of the plot (row column number).
+    :param image_dict: Dict with {"name": image} where image is of shape (channels, height, width).
+    :param gridsize: Size of the grid (ros, cols).
+    """
+    _grid = mpl_toolkits.axes_grid1.ImageGrid(fig, pos, nrows_ncols=gridsize)
+    _grid = [i for i in _grid]
+
+    for ax, (key, img) in zip(_grid, image_dict.items()):
+        img, cmap = _image_reshape(img)
+        ax.imshow(img, cmap=cmap)
+
+        ax.set_title(key)
+
+    for ax in _grid:
+        ax.axis("off")
+
+
+def image_grid(images, filepath, title):
+    """image_grid
+
+    :param images: Numpy array with shape (batch_size, channels, height, width).
+    :param filepath: Full path with extension to save to.
+    :param title: Figure title.
     """
     rows, cols = get_grid_size(images.shape[0])
 
-    fig, axes = plt.subplots(nrows=rows, ncols=cols, figsize=images.shape[1:3])
+    fig, axes = plt.subplots(nrows=rows, ncols=cols, figsize=(3, 3))
     axes = axes.flatten()
 
+    fig.suptitle(title)
+
     for img, ax in zip(images, axes):
-        img = np.squeeze(img)
-
-        if gray:
-            cmap = 'gray'
-        else:
-            cmap = None
-
+        img, cmap = _image_reshape(img)
         ax.imshow(img, cmap=cmap)
-        ax.axis('off')
+
+    for ax in axes:
+        ax.axis("off")
 
     plt.tight_layout()
+    plt.subplots_adjust(wspace=0, hspace=0)
 
-    if filepath:
-        plt.savefig(filepath)
-    else:
-        plt.show()
+    plt.savefig(filepath)
 
 
-def image(image_data, gray, filepath=None):
+def image(_image, filepath, **kwargs):
+    """image
+
+    :param _image: Numpy array with shape (channels, height, width).
+    :param filepath: Full path with extension to save to.
+    :param kwargs: Gets forwarded to imshow.
     """
-    :param image_data: Numpy array with shape (height, width, channels).
-    :param gray: If True, the grayvalue color map is used.
-    :param filepath: If not None, the image is saved as 'filepath'.
-    """
-    if gray:
-        cmap = 'gray'
-    else:
-        cmap = None
+    _image, cmap = _image_reshape(_image)
 
-    plt.imshow(image_data.squeeze(), cmap=cmap)
-    plt.axis('off')
+    _, ax = plt.subplots()
 
-    if filepath:
-        plt.savefig(filepath, bbox_inches='tight')
-    else:
-        plt.show()
+    ax.imshow(_image.squeeze(), cmap=cmap, **kwargs)
+    ax.axis("off")
+
+    plt.savefig(filepath, bbox_inches="tight")
+
 
 def get_grid_size(n):
-    """
+    """get_grid_size
+
     Returns rows and columns so that n images fit into the grid.
 
+    :param n: Number of images.
     :returns: (rows, columns)
     """
-    sqrt = np.sqrt(n)
-
-    if n % sqrt == 0:
-        return (int(sqrt),) * 2
-
-    return int(sqrt), int(sqrt) + 1
+    num = math.ceil(math.sqrt(n))
+    return (num,) * 2
