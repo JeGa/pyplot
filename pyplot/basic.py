@@ -129,7 +129,25 @@ def scatter(
     plt.savefig(filepath)
 
 
-def sorted_bar(data, filepath, title, ylabel):
+def bar_plot(data, filepath, title, xlabel, ylabel):
+    """bar_plot.
+
+    :param data: Dict with {key: scalar}.
+    :param filepath: Complete path to file with extension.
+    :param title: Title for the plot.
+    :param xlabel: Label for x axis.
+    :param ylabel: Label for y axis.
+    """
+    fig, ax = plt.subplots()
+    ax.bar(data.keys(), data.values())
+
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend=False)
+    pyplot.settings.set_size(fig)
+
+    plt.savefig(filepath)
+
+
+def sorted_bar(data, filepath, title, xlabel, ylabel):
     """sorted_bar.
 
     The color is always the same for each key when you call this function multiple times
@@ -137,6 +155,7 @@ def sorted_bar(data, filepath, title, ylabel):
 
     :param data: Dict with {key: scalar}.
     :param title: Title for the plot.
+    :param xlabel: Label for x axis.
     :param ylabel: Label for y axis.
     """
     fig, ax = plt.subplots()
@@ -151,7 +170,7 @@ def sorted_bar(data, filepath, title, ylabel):
 
     ax.bar(sorted_dict.keys(), sorted_dict.values(), color=colors)
 
-    pyplot.settings.set_settings(ax, title, ylabel=ylabel, legend=False)
+    pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend=False)
     pyplot.settings.set_size(fig)
 
     plt.savefig(filepath)

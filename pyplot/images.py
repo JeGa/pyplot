@@ -39,12 +39,14 @@ def subgrid(fig, pos, image_dict, gridsize):
         ax.axis("off")
 
 
-def image_grid(images, filepath, title):
+def image_grid(images, filepath, title, subtitles=None, tight_layout=False):
     """image_grid
 
     :param images: Numpy array with shape (batch_size, channels, height, width).
     :param filepath: Full path with extension to save to.
     :param title: Figure title.
+    :param subtitles: List of titles for each image.
+    :param layout: If True there will be no space between the images.
     """
     rows, cols = get_grid_size(images.shape[0])
 
@@ -53,15 +55,16 @@ def image_grid(images, filepath, title):
 
     fig.suptitle(title)
 
-    for img, ax in zip(images, axes):
+    for i, (img, ax) in enumerate(zip(images, axes)):
         img, cmap = _image_reshape(img)
-        ax.imshow(img, cmap=cmap)
+        ax.set_axis_off()
+        ax.imshow(img, cmap=cmap, aspect="auto")
 
-    for ax in axes:
-        ax.axis("off")
+        if subtitles is not None:
+            ax.set_title(subtitles[i])
 
-    plt.tight_layout()
-    plt.subplots_adjust(wspace=0, hspace=0)
+    if tight_layout:
+        fig.subplots_adjust(wspace=0.01, hspace=0.01)
 
     plt.savefig(filepath)
 
