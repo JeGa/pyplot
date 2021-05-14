@@ -39,14 +39,14 @@ def subgrid(fig, pos, image_dict, gridsize):
         ax.axis("off")
 
 
-def image_grid(images, filepath, title, subtitles=None, tight_layout=False):
+def image_grid(images, filepath, title, subtitles=None, padding=0.01):
     """image_grid
 
     :param images: Numpy array with shape (batch_size, channels, height, width).
     :param filepath: Full path with extension to save to.
     :param title: Figure title.
     :param subtitles: List of titles for each image.
-    :param layout: If True there will be no space between the images.
+    :param padding: Padding between images.
     """
     rows, cols = get_grid_size(images.shape[0])
 
@@ -57,14 +57,15 @@ def image_grid(images, filepath, title, subtitles=None, tight_layout=False):
 
     for i, (img, ax) in enumerate(zip(images, axes)):
         img, cmap = _image_reshape(img)
-        ax.set_axis_off()
         ax.imshow(img, cmap=cmap, aspect="auto")
 
         if subtitles is not None:
             ax.set_title(subtitles[i])
 
-    if tight_layout:
-        fig.subplots_adjust(wspace=0.01, hspace=0.01)
+    for ax in axes:
+        ax.set_axis_off()
+
+    fig.subplots_adjust(wspace=padding, hspace=padding)
 
     plt.savefig(filepath)
 
@@ -86,13 +87,32 @@ def image(_image, filepath, **kwargs):
     plt.savefig(filepath, bbox_inches="tight")
 
 
-def get_grid_size(n):
+def get_grid_size(n, square=True):
     """get_grid_size
 
     Returns rows and columns so that n images fit into the grid.
 
     :param n: Number of images.
+    :param square: If True, always returns rows == columns.
+
     :returns: (rows, columns)
     """
+    if n < 1:
+        raise ValueError("n needs to be at least one")
+
     num = math.ceil(math.sqrt(n))
-    return (num,) * 2
+
+    col = row = num
+
+    if square:
+        return row, col
+
+    if n <= (num * (num - 1)):
+        row = num - 1
+
+    return row, col
+
+
+def test():
+    for i in range(1, 17):
+        print(i, get_grid_size(i))
