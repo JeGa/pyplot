@@ -8,7 +8,7 @@ import pyplot.settings
 logger = logging.getLogger(__name__)
 
 
-def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None):
+def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=20):
     """histogram.
 
     :param data: Dict of {'label': data} were data is a numpy array of shape (N,).
@@ -22,7 +22,7 @@ def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None):
     fig, ax = plt.subplots()
 
     for entry_name, entry_data in data.items():
-        plt.hist(entry_data, label=entry_name, density=True, bins="auto", alpha=0.6)
+        plt.hist(entry_data, label=entry_name, density=True, bins=bins, alpha=0.6)
 
     if ylim:
         ax.set_ylim(ylim)
@@ -34,17 +34,22 @@ def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None):
     pyplot.settings.set_size(fig)
 
     plt.savefig(filepath)
+    plt.close()
 
 
-def lines(data, filepath, title, xlabel, ylabel, legend=True, infodict=None):
+def lines(
+    data, filepath, title, xlabel, ylabel, legend=True, infodict=None, margins=None
+):
     """lines
 
-    :param data: Dict with {'label': data} where data is a numpy array of shape (N, 2).
+    :param data: Dict with {'label': data} where data is a numpy array of shape (N, 2),
+        or {'label': (data, **kwargs)} were kwargs are the arguments for plot().
     :param filepath: Complete path to file with extension.
     :param title: Title for the plot.
     :param xlabel: Label for x axis.
     :param ylabel: Label for y axis.
-    :param legend: True to enable legend.
+    :param legend: True to enable legend,
+        or a dict with the parameters for plt.legend(**legend).
     :param infodict: If not None, dict is plotted as table besides line plot.
     """
     if infodict:
@@ -58,12 +63,16 @@ def lines(data, filepath, title, xlabel, ylabel, legend=True, infodict=None):
         fig, ax = plt.subplots()
 
     for label, line in data.items():
-        ax.plot(line[:, 0], line[:, 1], label=label, linewidth=0.5)
+        if isinstance(line, tuple):
+            ax.plot(line[0][:, 0], line[0][:, 1], label=label, **line[1])
+        else:
+            ax.plot(line[:, 0], line[:, 1], label=label, linewidth=0.5)
 
     pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
-    pyplot.settings.set_size(fig)
+    pyplot.settings.set_size(fig, margins=margins)
 
     plt.savefig(filepath)
+    plt.close()
 
 
 def lines_confidence(data, filepath, title, xlabel, ylabel, legend=True):
@@ -90,7 +99,9 @@ def lines_confidence(data, filepath, title, xlabel, ylabel, legend=True):
         ax.fill_between(line[:, 0], lower, upper, alpha=0.1)
 
     pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
+
     plt.savefig(filepath)
+    plt.close()
 
 
 def scatter(
@@ -127,6 +138,7 @@ def scatter(
     pyplot.settings.set_size(fig)
 
     plt.savefig(filepath)
+    plt.close()
 
 
 def bar_plot(data, filepath, title, xlabel, ylabel):
@@ -145,6 +157,7 @@ def bar_plot(data, filepath, title, xlabel, ylabel):
     pyplot.settings.set_size(fig)
 
     plt.savefig(filepath)
+    plt.close()
 
 
 def sorted_bar(data, filepath, title, xlabel, ylabel):
@@ -174,3 +187,4 @@ def sorted_bar(data, filepath, title, xlabel, ylabel):
     pyplot.settings.set_size(fig)
 
     plt.savefig(filepath)
+    plt.close()

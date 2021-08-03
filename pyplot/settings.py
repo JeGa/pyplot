@@ -27,4 +27,7 @@ def set_settings(ax, title, xlabel="", ylabel="", legend=True):
     ax.set_ylabel(ylabel)
 
     if legend:
-        ax.legend()
+        if isinstance(legend, dict):
+            ax.legend(**legend)
+        else:
+            ax.legend()

@@ -65,7 +65,15 @@ def image_grid(images, filepath, title, subtitles=None, padding=0.01):
     for ax in axes:
         ax.set_axis_off()
 
-    fig.subplots_adjust(wspace=padding, hspace=padding)
+    fig.subplots_adjust(
+        wspace=padding,
+        hspace=padding,
+        left=0.05,
+        right=0.95,
+        top=0.95,
+        bottom=0.05,
+    )
+    # fig.tight_layout()
 
     plt.savefig(filepath)
 
