@@ -8,7 +8,9 @@ import pyplot.settings
 logger = logging.getLogger(__name__)
 
 
-def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=20):
+def histogram(
+    data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=20, callback=None
+):
     """histogram.
 
     :param data: Dict of {'label': data} were data is a numpy array of shape (N,).
@@ -18,6 +20,7 @@ def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=
     :param ylabel: Label for y axis.
     :param ylim: Tuple with (bottom, top) limits for y axis.
     :param xlim: Tuple with (left, right) limits for x axis.
+    :param callback: Function accepting the axis object for custom stuff.
     """
     fig, ax = plt.subplots()
 
@@ -29,6 +32,9 @@ def histogram(data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=
 
     if xlim:
         ax.set_xlim(xlim)
+
+    if callback:
+        callback(ax)
 
     pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend=True)
     pyplot.settings.set_size(fig)
