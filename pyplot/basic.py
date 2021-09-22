@@ -1,6 +1,8 @@
 import logging
 
 import matplotlib.pyplot as plt
+import sklearn.neighbors
+import numpy as np
 
 import pyplot.misc
 import pyplot.settings
@@ -9,7 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 def histogram(
-    data, filepath, title, xlabel, ylabel, ylim=None, xlim=None, bins=20, callback=None
+    data,
+    filepath,
+    title,
+    xlabel,
+    ylabel,
+    ylim=None,
+    xlim=None,
+    bins=20,
+    callback=None,
+    density=True,
 ):
     """histogram.
 
@@ -21,11 +32,30 @@ def histogram(
     :param ylim: Tuple with (bottom, top) limits for y axis.
     :param xlim: Tuple with (left, right) limits for x axis.
     :param callback: Function accepting the axis object for custom stuff.
+    :param density: Plot additionally the kernel density estimation with Gaussian kernel.
     """
     fig, ax = plt.subplots()
 
-    for entry_name, entry_data in data.items():
-        plt.hist(entry_data, label=entry_name, density=True, bins=bins, alpha=0.6)
+    cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    for (entry_name, entry_data), color in zip(data.items(), cycle):
+        ax.hist(
+            entry_data,
+            label=entry_name,
+            density=True,
+            bins=bins,
+            alpha=0.6,
+            color=color,
+        )
+
+        if density:
+            kde = sklearn.neighbors.KernelDensity(bandwidth=0.3).fit(
+                entry_data.reshape((-1, 1))
+            )
+            x = np.linspace(entry_data.min(), entry_data.max(), 1000)
+            y = kde.score_samples(x.reshape((-1, 1)))
+
+            ax.plot(x, np.exp(y), linewidth=0.5, color=color)
 
     if ylim:
         ax.set_ylim(ylim)
