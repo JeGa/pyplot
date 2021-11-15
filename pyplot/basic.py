@@ -141,7 +141,16 @@ def lines_confidence(data, filepath, title, xlabel, ylabel, legend=True):
 
 
 def scatter(
-    points, filepath, title, xlabel, ylabel, legend=True, xlim=None, ylim=None, **kwargs
+    points,
+    filepath,
+    title,
+    xlabel,
+    ylabel,
+    legend=True,
+    xlim=None,
+    ylim=None,
+    callback=None,
+    **kwargs
 ):
     """scatter.
 
@@ -153,6 +162,7 @@ def scatter(
     :param legend: True to enable legend.
     :param ylim: Tuple with (bottom, top) limits for y axis.
     :param xlim: Tuple with (left, right) limits for x axis.
+    :param callback: Function accepting the axis object for custom stuff.
     :param kwargs: Forwarded to ax.scatter.
     """
     for z in points.values():
@@ -169,6 +179,9 @@ def scatter(
 
     if ylim:
         ax.set_ylim(ylim)
+
+    if callback:
+        callback(ax)
 
     pyplot.settings.set_settings(ax, title, xlabel, ylabel, legend)
     pyplot.settings.set_size(fig)
