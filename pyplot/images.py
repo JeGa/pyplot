@@ -16,27 +16,32 @@ def _image_reshape(_image):
     return _image, cmap
 
 
-def subgrid(fig, pos, image_dict, gridsize):
+def subgrid(fig, pos, images, gridsize, padding, titles=None):
     """
     Plot image grid on an existing plot.
-    Be sure to create an axes for the subgrid before.
+    Be sure to create the axes for the subgrid before.
 
     :param fig: Matplotlib figure to plot on.
-    :param pos: Position of the plot (row column number).
-    :param image_dict: Dict with {"name": image} where image is of shape (channels, height, width).
-    :param gridsize: Size of the grid (ros, cols).
+    :param pos: Position of the plot with tuple (nrows, ncols, index).
+    :param images: Numpy array with shape (n, channels, height, width).
+    :param gridsize: Size of the grid (rows, cols).
+    :param padding: Padding between the images.
+    :param titles: List of titles or None.
     """
-    _grid = mpl_toolkits.axes_grid1.ImageGrid(fig, pos, nrows_ncols=gridsize)
+    _grid = mpl_toolkits.axes_grid1.ImageGrid(
+        fig, pos, nrows_ncols=gridsize, axes_pad=padding
+    )
     _grid = [i for i in _grid]
 
-    for ax, (key, img) in zip(_grid, image_dict.items()):
-        img, cmap = _image_reshape(img)
-        ax.imshow(img, cmap=cmap)
+    for i in range(images.shape[0]):
+        img, cmap = _image_reshape(images[i])
+        _grid[i].imshow(img, cmap=cmap)
 
-        ax.set_title(key)
+        if titles:
+            _grid[i].set_title(titles[i])
 
     for ax in _grid:
-        ax.axis("off")
+        ax.set_axis_off()
 
 
 def image_grid(images, filepath, title, subtitles=None, padding=0.01):
@@ -73,7 +78,6 @@ def image_grid(images, filepath, title, subtitles=None, padding=0.01):
         top=0.95,
         bottom=0.05,
     )
-    # fig.tight_layout()
 
     plt.savefig(filepath)
 
